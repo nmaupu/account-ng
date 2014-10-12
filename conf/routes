@@ -1,0 +1,17 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# version
+GET           /version           controllers.Application.version
+
+# Map static resources from the /public folder to the /assets URL path
+#GET           /assets/*file        controllers.Assets.at(path="/public", file)
+
+GET           /categories        controllers.CategoryController.categories
+POST          /categories        controllers.CategoryController.addCategory
+DELETE        /categories        controllers.CategoryController.deleteCategory
+
+GET           /expenses          controllers.ExpenseController.expenses
+POST          /expenses          controllers.ExpenseController.addExpense
+DELETE        /expenses          controllers.ExpenseController.deleteExpense
