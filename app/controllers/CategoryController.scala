@@ -1,8 +1,8 @@
 package controllers
 
+import models.model.Category
 import play.api.libs.json.{JsError, Json}
 import play.api.mvc._
-import models.Category
 import play.api.libs.json._
 
 
@@ -22,12 +22,12 @@ object CategoryController extends Controller {
   implicit val categoryWrites = Json.writes[Category]
 
   def categories = Action {
-    Ok(Json.toJson(Category.all))
+    Ok(Json.toJson(Category.list()))
   }
 
   def addCategory = Action(parse.json) { implicit request =>
     request.body.validate[String].map {
-      case name => Ok(Json.toJson(Category.create(name) == 1))
+      case name => Ok(Json.toJson(Category.insert(Category(None, name))))
     }.recoverTotal {
       e => BadRequest("Detected error: " + JsError.toFlatJson(e))
     }
@@ -35,7 +35,7 @@ object CategoryController extends Controller {
 
   def deleteCategory() = Action(parse.json) { implicit request =>
     request.body.validate[Long].map {
-      case id => Ok(Json.toJson(Category.delete(id) == 1))
+      case id => Ok(Json.toJson(Category.delete(id)))
     }.recoverTotal {
       e => BadRequest("Detected error: " + JsError.toFlatForm(e))
     }
