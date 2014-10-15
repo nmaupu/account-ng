@@ -4,6 +4,7 @@ import java.util.Date
 import anorm._
 import anorm.SqlParser._
 import play.api.db.DB
+import play.api.Play.current
 
 
 /**
@@ -38,6 +39,16 @@ object Expense {
   
   // -- Queries
 
+  def all(): Seq[Expense] = {
+    DB.withConnection { implicit connection =>
+      SQL(
+      """
+        SELECT * from Expense
+      """).as(Expense.simpleParser *)
+    }
+  }
+
+  /*
   def list(fromDate: Date, toDate: Date): Seq[(Expense, Category, User)] = {
     DB.withConnection { implicit connection =>
       SQL(
@@ -49,9 +60,10 @@ object Expense {
         ORDER BY expense.date DESC
       """)
         .on('fromDate -> fromDate, 'toDate -> toDate)
-        .as(Expense.simpleParser * ~ Category.simpleParser * ~ User.simpleParser *)
+        .as(Expense.simpleParser ~ Category.simpleParser ~ User.simpleParser *)
     }
   }
+  */
 
   /**
    * Retrieve an Expense from id
@@ -82,6 +94,7 @@ object Expense {
         .on(
           'id -> id,
           'amount -> expense.amount,
+          'date -> expense.date,
           'comment -> expense.comment,
           'categoryId -> expense.categoryId,
           'userId -> expense.userId)
@@ -98,12 +111,12 @@ object Expense {
     DB.withConnection { implicit connection =>
       SQL(
         """
-          INSERT INTO expense values (
-            (select next value for expense_seq),
-            {amount}, {comment}, {categoryId}, {userId}
+          INSERT INTO expense (amount, date, comment, categoryId, userId) VALUES (
+            {amount}, {date}, {comment}, {categoryId}, {userId}
           )
         """)
         .on('amount -> expense.amount,
+            'date -> expense.date,
             'comment -> expense.comment,
             'categoryId -> expense.categoryId,
             'userId -> expense.userId)
@@ -174,10 +187,10 @@ object Category {
     DB.withConnection { implicit connection =>
       SQL(
       """
-        INSERT INTO category VALUES
+        INSERT INTO category (name) VALUES
         (
-          (select next value for expense_seq),
-          name = {name}
+          {name}
+        )
       """)
         .on('name -> category.name)
         .executeUpdate() == 1

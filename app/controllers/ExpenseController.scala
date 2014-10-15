@@ -17,20 +17,12 @@ object ExpenseController extends Controller {
   /**
    * Json reads
    */
-  /*implicit val rdsExpense = (
+  implicit val rdsExpense = (
     (__ \ 'amount).read[Double] and
     (__ \ 'date).read[Date] and
     (__ \ 'category).read[Long]
-  ) tupled*/
-  implicit val rdsExpense = Json.reads[Expense]
-  implicit val rdsId = (__ \ 'id).read[Long]
-  implicit val rdsExpenseCategoryUser = (
-    (__ \ 'expense \ 'amount).read[Double] and
-    (__ \ 'expense \ 'date).read[Date] and
-    (__ \ 'expense \ 'comment).read[String] and
-    (__ \ 'category \ 'name).read[String] and
-    (__ \ 'user \ 'login).read[String]
   ) tupled
+  implicit val rdsId = (__ \ 'id).read[Long]
 
   /**
    * Json writes
@@ -49,7 +41,7 @@ object ExpenseController extends Controller {
   def expenses = Action {
     val fromDate = new GregorianCalendar(2010, 1, 1)
     val endDate = new GregorianCalendar
-    Ok(Json.toJson(Expense.list(fromDate.getTime, endDate.getTime)))
+    Ok(Json.toJson(Expense.all()))
   }
 
   def addExpense = Action(parse.json) { request =>
