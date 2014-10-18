@@ -1,6 +1,6 @@
 package controllers
 
-import models.model.Category
+import models.Category
 import play.api.libs.json.{JsError, Json}
 import play.api.mvc._
 import play.api.libs.json._
@@ -37,7 +37,7 @@ object CategoryController extends Controller {
     request.body.validate[Long].map {
       case id => Ok(Json.toJson(Category.delete(id)))
     }.recoverTotal {
-      e => BadRequest("Detected error: " + JsError.toFlatForm(e))
+      e => BadRequest("Detected error: " + JsError.toFlatJson(e))
     }
   }
 }

@@ -12,6 +12,10 @@ GET           /categories        controllers.CategoryController.categories
 POST          /categories        controllers.CategoryController.addCategory
 DELETE        /categories        controllers.CategoryController.deleteCategory
 
-GET           /expenses          controllers.ExpenseController.expenses
+GET           /expenses          controllers.ExpenseController.expenses(from: String, to: String)
 POST          /expenses          controllers.ExpenseController.addExpense
 DELETE        /expenses          controllers.ExpenseController.deleteExpense
+
+GET           /users             controllers.UserController.users
+POST          /users             controllers.UserController.addUser
+DELETE        /users             controllers.UserController.deleteUser

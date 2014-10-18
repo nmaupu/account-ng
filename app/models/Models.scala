@@ -1,4 +1,4 @@
-package models.model
+package models
 
 import java.util.Date
 import anorm._
@@ -14,7 +14,7 @@ import play.api.Play.current
 case class User(id: Option[Long] = None, login: String, password: String)
 case class Category(id: Option[Long] = None, name: String)
 case class Expense(id: Option[Long] = None, amount: Double, date: Date, comment: String, categoryId: Long, userId: Long)
-case class ExpenseFull(id: Option[Long] = None, amount: Double, date: Date, comment: String, category: Category, user: User)
+case class ExpenseFull(expense: Expense, category: Category, user: User)
 
 object Expense {
   //-- Parsers
@@ -33,9 +33,9 @@ object Expense {
     }
   }
 
-  /*val withCategoryUserParser = Expense.simpleParser ~ (Expense.simpleParser ?) map {
-    case expense~category~user => (expense, category, user)
-  }*/
+  val withCategoryUserParser = (Expense.simpleParser ~ Category.simpleParser ~ User.simpleParser) map {
+    case expense~category~user => ExpenseFull(expense, category, user)
+  }
   
   // -- Queries
 
@@ -48,22 +48,19 @@ object Expense {
     }
   }
 
-  /*
-  def list(fromDate: Date, toDate: Date): Seq[(Expense, Category, User)] = {
+  def list(fromDate: Date, toDate: Date): Seq[ExpenseFull] = {
     DB.withConnection { implicit connection =>
       SQL(
       """
-        SELECT expense.*, category.name, user.login FROM expense
-        LEFT JOIN category ON category.id = expense.categoryId
-        LEFT JOIN user ON user.id = expense.userId
-        WHERE expense.date > {fromDate} AND expense.date < {toDate}
-        ORDER BY expense.date DESC
-      """)
-        .on('fromDate -> fromDate, 'toDate -> toDate)
-        .as(Expense.simpleParser ~ Category.simpleParser ~ User.simpleParser *)
+        SELECT e.*, c.*, u.* FROM expense e
+        LEFT JOIN category c ON c.id = e.categoryId
+        LEFT JOIN user u ON u.id = e.userId
+        WHERE e.date > {fromDate} AND e.date < {toDate}
+        ORDER BY e.date DESC
+      """).on('fromDate -> fromDate, 'toDate -> toDate)
+        .as(withCategoryUserParser *)
     }
   }
-  */
 
   /**
    * Retrieve an Expense from id
@@ -224,6 +221,72 @@ object User {
     get[String]("user.login") ~
     get[String]("user.password") map {
       case id~login~password => User(id, login, password)
+    }
+  }
+
+  /**
+   * List all users
+   * @return A list of all users
+   */
+  def list(): Seq[User] = {
+    DB.withConnection { implicit connection =>
+      SQL("SELECT * from user")
+        .as(User.simpleParser *)
+    }
+  }
+
+  /**
+   * Insert a new user in DB
+   * @param user The user to insert
+   * @return True inserted successfully, false otherwise
+   */
+  def insert(user: User): Boolean = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+        INSERT INTO user (login, password) VALUES
+        (
+          {login}, {password}
+        )
+        """)
+        .on('login -> user.login, 'password -> user.password)
+        .executeUpdate() == 1
+    }
+  }
+
+  /**
+   * Delete a user from DB
+   * @param id The id of user to delete
+   * @return True if deleted successfully, false otherwise
+   */
+  def delete(id: Long): Boolean = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+        DELETE FROM user
+        WHERE id = {id}
+        """)
+        .on('id -> id)
+        .executeUpdate() == 1
+    }
+  }
+
+  /**
+   * Udate a user
+   * @param id The id of user to update
+   * @param user The new user information
+   * @return True if updated successfully, false otherwise
+   */
+  def update(id:Long, user: User): Boolean = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+        UPDATE user
+        SET login = {login}, password = {password}
+        WHERE id = {id}
+        """)
+        .on('id -> id, 'login -> user.login, 'password -> user.password)
+        .executeUpdate() == 1
     }
   }
 }
